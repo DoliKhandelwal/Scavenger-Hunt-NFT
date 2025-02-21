@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scavenger Hunt NFT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:disabled {
+            background-color: #bbb;
+            cursor: not-allowed;
+        }
+        #restartGame {
+            background-color: #d32f2f;
+        }
+        #restartGame:hover {
+            background-color: #b71c1c;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.1.2/web3.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Scavenger Hunt NFT</h1>
+        <button id="connectWallet">Connect Wallet</button>
+        <p id="walletAddress"></p>
+        <div id="questionContainer"></div>
+        <p id="status"></p>
+        <button id="restartGame" class="hidden">Start Again</button>
+    </div>
+
+    <script>
+        let web3;
+        let userAccount;
+
+        document.getElementById('connectWallet').addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    web3 = new Web3(window.ethereum);
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3.eth.getAccounts();
+                    userAccount = accounts[0];
+                    document.getElementById('walletAddress').textContent = `Connected: ${userAccount}`;
+                } catch (error) {
+                    console.error("Error connecting wallet", error);
+                }
+            } else {
+                alert("Please install MetaMask!");
+            }
+        });
+
+        let currentQuestion = 0;
+        const questions = [
+            { question: "What is Ethereum?", options: ["A cryptocurrency", "A decentralized platform", "A social media network"], correct: 1 },
+            { question: "Which NFT marketplace is the most popular?", options: ["OpenSea", "Rarible", "SuperRare"], correct: 0 },
+            { question: "What does 'gas' mean in Ethereum?", options: ["Cost to execute transactions", "A gas station", "A service fee"], correct: 0 }
+        ];
+        
+        function loadQuestion() {
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = '';
+            document.getElementById('status').textContent = '';
+            document.getElementById('restartGame').classList.add('hidden');
+            
+            if (currentQuestion >= questions.length) {
+                document.getElementById('status').textContent = 'Congratulations! NFT Claimed!';
+                return;
+            }
+            
+            let q = questions[currentQuestion];
+            let questionDiv = document.createElement('div');
+            questionDiv.innerHTML = `<h2>${q.question}</h2>`;
+            q.options.forEach((option, index) => {
+                let btn = document.createElement('button');
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index === q.correct);
+                questionDiv.appendChild(btn);
+            });
+            container.appendChild(questionDiv);
+        }
+        
+        function checkAnswer(isCorrect) {
+            if (isCorrect) {
+                document.getElementById('status').textContent = `NFT Claimed for Question ${currentQuestion + 1}!`;
+                currentQuestion++;
+                setTimeout(loadQuestion, 1000);
+            } else {
+                document.getElementById('status').textContent = 'Game Over! Try Again!';
+                document.getElementById('restartGame').classList.remove('hidden');
+            }
+        }
+        
+        document.getElementById('restartGame').addEventListener('click', () => {
+            currentQuestion = 0;
+            loadQuestion();
+        });
+        
+        loadQuestion();
+    </script>
+</body>
+</html>
